@@ -1,33 +1,48 @@
-# Telegram notice bot (QNAP TS-251, Docker)
+# 텔레그램 공지 봇 (QNAP TS-251, Docker)
 
-Save short notices **per chat** (each group has its own keys). Data is stored in a single **SQLite** file.
+채팅방(또는 1:1)별로 짧은 공지를 **키워드 형태로 저장/조회**하는 봇입니다.  
+데이터는 **SQLite 파일 1개**로 저장됩니다.
 
-## What you asked for
+## 현재 동작
 
-1. **Runtime**: QNAP TS-251 — use **Container Station** with the included `Dockerfile`, or any host with Python 3.
-2. **Behavior**: Remember text under a **key**, then print it again with a command (`/get`).
-3. **Group use**: Good for “pinned” announcements. **Save/delete** is **admin-only** in groups; anyone can **read** (`/get`, `/list`).
+- 명령어는 `/` 대신 `!` 접두사를 사용합니다.
+- 그룹에서도 **관리자 제한 없이 누구나 저장/삭제**할 수 있습니다.
+- 키워드 조회는 `!키워드`처럼 입력하면 됩니다.
 
-## Commands (bot replies are in English)
+## 명령어
 
-| Command | Description |
-|--------|-------------|
-| `/save key text...` | Save (groups: **admins only**) |
-| Reply to a message, then `/save key` | Save that message body |
-| `/get key` | Show saved text |
-| `/list` | List keys in this chat |
-| `/delete key` | Delete (groups: **admins only**) |
+| 입력 | 설명 |
+|------|------|
+| `!기억 키 내용...` | 공지 저장 |
+| (메시지에 답장 후) `!기억 키` | 답장한 메시지 본문 저장 |
+| `!키` | 저장된 공지 조회 |
+| `!목록` | 현재 채팅의 키 목록 조회 |
+| `!삭제 키` | 저장된 공지 삭제 |
 
-**Privacy mode:** For reply-to-save, turn **Privacy mode** off in BotFather (`/setprivacy` → Disable).
+예시:
 
-**Keys:** Use one token without spaces, e.g. `meeting`, `parking`, `rules2024`.
+- `!기억 회식 이번 주 금요일 7시`
+- `!회식`
+- `!목록`
+- `!삭제 회식`
 
-## Create the bot
+## BotFather 설정 (중요)
 
-1. Open [@BotFather](https://t.me/BotFather), create a bot, copy the **token**.
-2. Add the bot to your group.
+그룹에서 `!기억`, `!목록`, `!키워드` 같은 일반 텍스트를 받으려면  
+**Privacy Mode를 꺼야** 합니다.
 
-## Run on QNAP (Docker)
+1. [@BotFather](https://t.me/BotFather) 열기
+2. `/setprivacy`
+3. 봇 선택
+4. `Disable`
+
+## 봇 생성
+
+1. [@BotFather](https://t.me/BotFather)에서 `/newbot`으로 봇 생성
+2. 발급된 토큰 복사
+3. 봇을 사용할 그룹에 초대
+
+## QNAP에서 실행 (Docker)
 
 ```bash
 cd telegram_notice_bot
@@ -39,9 +54,23 @@ docker run -d --name telegram-notice-bot \
   telegram-notice-bot
 ```
 
-Inside the container the DB defaults to `/data/notices.db` (`NOTICE_DB_PATH` in `Dockerfile`).
+- 컨테이너 내부 DB 기본 경로: `/data/notices.db`
+- 필요 시 환경변수 `NOTICE_DB_PATH`로 경로를 직접 지정할 수 있습니다.
 
-## Local test (Windows)
+컨테이너를 수정 코드로 다시 올릴 때:
+
+```bash
+docker build -t telegram-notice-bot .
+docker stop telegram-notice-bot
+docker rm telegram-notice-bot
+docker run -d --name telegram-notice-bot \
+  --restart unless-stopped \
+  -e TELEGRAM_BOT_TOKEN="YOUR_TOKEN_HERE" \
+  -v /share/Container/telegram_bot_data:/data \
+  telegram-notice-bot
+```
+
+## 로컬 테스트 (Windows)
 
 ```bash
 cd telegram_notice_bot
@@ -49,21 +78,21 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 copy .env.example .env
-REM put TELEGRAM_BOT_TOKEN in .env
+REM .env 파일에 TELEGRAM_BOT_TOKEN 입력
 python bot.py
 ```
 
-Default DB path: `notices.db` next to `bot.py`.
+기본 DB 경로는 `bot.py` 옆의 `notices.db` 입니다.
 
-## Security
+## 보안 주의사항
 
-- Never commit `.env` or tokens.
-- Saved text is posted as-is; admin-only `/save` limits who can publish.
+- `.env` 파일과 토큰은 절대 커밋하지 마세요.
+- 저장된 텍스트는 입력한 그대로 전송됩니다.
 
-## Files
+## 파일 구성
 
-- `bot.py` — bot logic
-- `storage.py` — SQLite access
-- `requirements.txt`
-- `Dockerfile`
-- `.env.example`
+- `bot.py` : 봇 로직
+- `storage.py` : SQLite 저장 로직
+- `requirements.txt` : 의존성 목록
+- `Dockerfile` : 컨테이너 빌드 설정
+- `.env.example` : 환경변수 예시
