@@ -5,7 +5,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY storage.py bot.py ./
+COPY storage.py bot.py date_parser.py ./
 
 ENV PYTHONUNBUFFERED=1
 ENV NOTICE_DB_PATH=/data/notices.db
