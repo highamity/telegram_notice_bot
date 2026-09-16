@@ -52,6 +52,24 @@ def test_dday_input_parsing():
     assert name == "수능"
     assert d == date(2026, 11, 19)
 
+    # Bidirectional tests (<date> <name>)
+    name, d = parse_dday_input("2026-11-19 수능")
+    assert name == "수능"
+    assert d == date(2026, 11, 19)
+
+    name, d = parse_dday_input("2020-05-10 결혼")
+    assert name == "결혼"
+    assert d == date(2020, 5, 10)
+
+    # Edge cases: "내일치과", quotes
+    name, d = parse_dday_input("내일치과 2026-10-01")
+    assert name == "내일치과"
+    assert d == date(2026, 10, 1)
+
+    name, d = parse_dday_input('2026-10-01 "내일 치과"')
+    assert name == "내일 치과"
+    assert d == date(2026, 10, 1)
+
     print("PASS: test_dday_input_parsing")
 
 
@@ -80,6 +98,39 @@ def test_schedule_input_parsing():
     dt, content = parse_schedule_input("내일 10:00 치과")
     assert dt.hour == 10 and dt.minute == 0
     assert content == "치과"
+
+    # Bidirectional tests
+    dt, content = parse_schedule_input("팀 회의 9/20 14:00")
+    assert dt.month == 9 and dt.day == 20 and dt.hour == 14 and dt.minute == 0
+    assert content == "팀 회의"
+
+    dt, content = parse_schedule_input("치과 방문 내일 10:00")
+    assert dt.hour == 10 and dt.minute == 0
+    assert content == "치과 방문"
+
+    # Edge cases: "내일치과", "오늘병원"
+    dt, content = parse_schedule_input("내일치과 9/20 14:00")
+    assert dt.month == 9 and dt.day == 20 and dt.hour == 14 and dt.minute == 0
+    assert content == "내일치과"
+
+    dt, content = parse_schedule_input("오늘병원 내일 10:00")
+    assert dt.hour == 10 and dt.minute == 0
+    assert content == "오늘병원"
+
+    # Edge case: "내일 치과" with space where numeric date 9/20 takes precedence
+    dt, content = parse_schedule_input("내일 치과 9/20 14:00")
+    assert dt.month == 9 and dt.day == 20 and dt.hour == 14 and dt.minute == 0
+    assert content == "내일 치과"
+
+    # Edge case: Quote protection
+    dt, content = parse_schedule_input('"내일 치과" 내일 10:00')
+    assert dt.hour == 10 and dt.minute == 0
+    assert content == "내일 치과"
+
+    # Time omitted bidirectional
+    dt, content = parse_schedule_input("팀 회의 9/20")
+    assert dt.month == 9 and dt.day == 20 and dt.hour == 9 and dt.minute == 0
+    assert content == "팀 회의"
 
     print("PASS: test_schedule_input_parsing")
 

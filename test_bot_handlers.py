@@ -76,6 +76,17 @@ async def test_bot_dispatch():
         assert "매년 반복" in reply
         assert "일째" in reply
 
+        # 5-0. Test Bidirectional inputs (Schedule & D-Day with reversed order)
+        u_b1, msg_b1, ctx_b1 = make_mock_update(chat_id, "!일정 회의B 9/20 16:00")
+        await bot.on_bang_message(u_b1, ctx_b1)
+        assert "일정이 등록되었습니다" in msg_b1.reply_text.call_args[0][0]
+        assert "회의B" in msg_b1.reply_text.call_args[0][0]
+
+        u_b2, msg_b2, ctx_b2 = make_mock_update(chat_id, "!디데이 2026-12-25 크리스마스")
+        await bot.on_bang_message(u_b2, ctx_b2)
+        assert "디데이가 저장되었습니다" in msg_b2.reply_text.call_args[0][0]
+        assert "크리스마스" in msg_b2.reply_text.call_args[0][0]
+
         # 5-1. Test !기념일 command registration
         u, msg, ctx = make_mock_update(chat_id, "!기념일 철수생일 10/25")
         await bot.on_bang_message(u, ctx)
@@ -116,7 +127,7 @@ async def test_bot_dispatch():
         mock_app.bot.send_message = AsyncMock()
 
         # Run one iteration of schedule worker logic
-        due = await bot.STORE.pop_due_schedules("2099-01-01 00:00:00")
+        due = await bot.STORE.pop_due_schedules("2020-01-02 00:00:00")
         assert len(due) == 1
         assert due[0]["content"] == "과거 알림 테스트"
         await mock_app.bot.send_message(chat_id=due[0]["chat_id"], text=f"⏰ [일정 알림]\n{due[0]['content']}\n(예약 시각: {due[0]['remind_at'][:16]})")
