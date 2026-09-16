@@ -33,6 +33,12 @@ async def test_bot_dispatch():
 
         chat_id = 999
 
+        # 0. Test help command (!도움말)
+        u_help, msg_help, ctx_help = make_mock_update(chat_id, "!도움말")
+        await bot.on_bang_message(u_help, ctx_help)
+        assert msg_help.reply_text.called
+        assert "공지 및 일정 알림 봇" in msg_help.reply_text.call_args[0][0]
+
         # 1. Test schedule registration
         u, msg, ctx = make_mock_update(chat_id, "!일정 9/20 14:00 팀 회의")
         await bot.on_bang_message(u, ctx)

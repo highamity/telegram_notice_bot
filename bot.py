@@ -83,6 +83,8 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "• !디데이 (또는 !기념일) — 등록된 디데이/기념일 전체 목록\n"
         "• !디데이 <이름> (또는 !<이름>) — 특정 디데이 단건 조회\n"
         "• !디데이삭제 <이름> (또는 !기념일삭제 <이름>) — 삭제\n\n"
+        "【기타】\n"
+        "• !도움말 (또는 /help) — 도움말 보기\n\n"
         "※ 그룹에서 메시지를 정상 수신하려면 BotFather에서 Privacy Mode를 꺼주세요."
     )
     if update.effective_message:
@@ -420,6 +422,10 @@ async def on_bang_message(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     raw = (msg.text or "").strip()
     if not raw.startswith("!"):
+        return
+
+    if raw in ("!도움말", "!도움", "!help"):
+        await cmd_start(update, context)
         return
 
     if raw == "!목록":
