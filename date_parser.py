@@ -235,12 +235,12 @@ def calculate_dday_info(
     else:
         # Past: Day 1 is the target_date itself
         elapsed_days = (today - target_date).days + 1
-        d_plus = elapsed_days - 1
         years = today.year - target_date.year
+        date_str = target_date.strftime("%Y-%m-%d")
         if repeat_yearly and years > 0:
-            desc = f"{years}주년, D+{d_plus}, {target_date.strftime('%Y-%m-%d')} 시작"
+            desc = f"{years}주년, {date_str}"
         else:
-            desc = f"D+{d_plus} ({target_date.strftime('%Y-%m-%d')} 시작)"
+            desc = date_str
         return f"{elapsed_days}일째", desc
 
 

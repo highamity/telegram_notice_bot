@@ -24,12 +24,12 @@ def test_dday_calculation():
     # 2. Yesterday -> MUST BE 2일째!
     badge, desc = calculate_dday_info(date(2026, 9, 15), today)
     assert badge == "2일째", f"Expected 2일째, got {badge}"
-    assert "D+1" in desc
+    assert desc == "2026-09-15"
 
-    # 3. 2020-05-10 wedding -> 2321일째!
-    badge, desc = calculate_dday_info(date(2020, 5, 10), today)
+    # 3. 2020-05-10 wedding -> 2321일째, 6주년, 2020-05-10!
+    badge, desc = calculate_dday_info(date(2020, 5, 10), today, repeat_yearly=True)
     assert badge == "2321일째", f"Expected 2321일째, got {badge}"
-    assert "D+2320" in desc
+    assert desc == "6주년, 2020-05-10"
 
     # 4. Future event (2026-11-19) -> D-64
     badge, desc = calculate_dday_info(date(2026, 11, 19), today)
