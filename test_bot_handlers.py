@@ -9,16 +9,21 @@ from date_parser import KST, get_now_kst
 from storage import NoticeStore
 
 
-def make_mock_update(chat_id: int, text: str):
+def make_mock_update(chat_id: int, text: str, user_id: int = 1234, user_name: str = "테스터"):
     update = MagicMock()
     msg = MagicMock()
     msg.text = text
     msg.reply_to_message = None
     msg.reply_text = AsyncMock()
+    msg.reply_dice = AsyncMock()
     update.effective_message = msg
     chat = MagicMock()
     chat.id = chat_id
     update.effective_chat = chat
+    user = MagicMock()
+    user.id = user_id
+    user.first_name = user_name
+    update.effective_user = user
     context = MagicMock()
     return update, msg, context
 
@@ -155,6 +160,38 @@ async def test_bot_dispatch():
         u_y2, msg_y2, ctx_y2 = make_mock_update(chat_y, "!일정")
         await bot.on_bang_message(u_y2, ctx_y2)
         assert "예정된 일정이 없습니다" in msg_y2.reply_text.call_args[0][0]
+
+        # 11. Mini-games: !운세
+        u_fortune, msg_fortune, ctx_fortune = make_mock_update(chat_id, "!운세", user_name="길동")
+        await bot.on_bang_message(u_fortune, ctx_fortune)
+        assert msg_fortune.reply_text.called
+        assert "길동" in msg_fortune.reply_text.call_args[0][0]
+        assert "오늘의 운세" in msg_fortune.reply_text.call_args[0][0]
+
+        # 12. Mini-games: !포커
+        u_poker, msg_poker, ctx_poker = make_mock_update(chat_id, "!포커", user_name="길동")
+        await bot.on_bang_message(u_poker, ctx_poker)
+        assert msg_poker.reply_text.called
+        assert "포커 패" in msg_poker.reply_text.call_args[0][0]
+        assert "결과:" in msg_poker.reply_text.call_args[0][0]
+
+        # 13. Mini-games: !주사위
+        u_dice, msg_dice, ctx_dice = make_mock_update(chat_id, "!주사위")
+        await bot.on_bang_message(u_dice, ctx_dice)
+        assert msg_dice.reply_dice.called
+        assert msg_dice.reply_dice.call_args[1]["emoji"] == "🎲"
+
+        # 14. Mini-games: !슬롯
+        mock_slot_msg = MagicMock()
+        mock_slot_msg.dice = MagicMock()
+        mock_slot_msg.dice.value = 64  # Jackpot 777
+        u_slot, msg_slot, ctx_slot = make_mock_update(chat_id, "!슬롯")
+        msg_slot.reply_dice.return_value = mock_slot_msg
+        await bot.on_bang_message(u_slot, ctx_slot)
+        assert msg_slot.reply_dice.called
+        assert msg_slot.reply_dice.call_args[1]["emoji"] == "🎰"
+        assert msg_slot.reply_text.called
+        assert "잭팟" in msg_slot.reply_text.call_args[0][0]
 
         print("ALL BOT HANDLER AND WORKER TESTS PASSED!")
 

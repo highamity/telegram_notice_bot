@@ -27,6 +27,7 @@ from date_parser import (
     parse_dday_input,
     parse_schedule_input,
 )
+from fun_features import format_poker_result, get_daily_fortune
 from storage import NoticeStore
 
 load_dotenv()
@@ -83,6 +84,11 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "• !디데이 (또는 !기념일) — 등록된 디데이/기념일 전체 목록\n"
         "• !디데이 <이름> (또는 !<이름>) — 특정 디데이 단건 조회\n"
         "• !디데이삭제 <이름> (또는 !기념일삭제 <이름>) — 삭제\n\n"
+        "【미니게임 & 오락 🎲】\n"
+        "• !운세 — 오늘의 운세 및 행운의 메뉴/숫자 (하루 1회 고정)\n"
+        "• !포커 — 5장의 카드를 뽑고 포커 족보 판정\n"
+        "• !주사위 — 텔레그램 3D 주사위 굴리기 (1~6)\n"
+        "• !슬롯 (또는 !슬롯머신) — 텔레그램 슬롯머신 돌리기 (777 잭팟 감지)\n\n"
         "💡 팁: '내일 치과'처럼 날짜 단어가 포함된 이름은 따옴표(\"내일 치과\")나 붙여쓰기(내일치과)를 사용하면 더욱 안전합니다.\n\n"
         "【기타】\n"
         "• !도움말 (또는 /help) — 도움말 보기\n\n"
@@ -489,6 +495,33 @@ async def on_bang_message(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     if raw.startswith("!디데이"):
         await cmd_dday(update, context, is_anniversary_cmd=False)
+        return
+
+    if raw == "!운세":
+        user = update.effective_user
+        user_id = user.id if user else 0
+        user_name = user.first_name if (user and user.first_name) else "익명"
+        today_str = get_now_kst().strftime("%Y-%m-%d")
+        text = get_daily_fortune(user_id, user_name, today_str)
+        await msg.reply_text(text)
+        return
+
+    if raw == "!포커":
+        user = update.effective_user
+        user_name = user.first_name if (user and user.first_name) else "사용자"
+        text = format_poker_result(user_name)
+        await msg.reply_text(text)
+        return
+
+    if raw == "!주사위":
+        await msg.reply_dice(emoji="🎲")
+        return
+
+    if raw in ("!슬롯", "!슬롯머신"):
+        dice_msg = await msg.reply_dice(emoji="🎰")
+        if dice_msg.dice and dice_msg.dice.value == 64:
+            await asyncio.sleep(2)
+            await msg.reply_text("🎉 대박! 777 잭팟이 터졌습니다! 💰💰💰")
         return
 
     key = raw[1:].strip()
